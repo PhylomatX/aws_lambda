@@ -6,7 +6,7 @@ Resources:
     Type: AWS::SageMaker::CodeRepository
     Properties:
       GitConfig:
-          RepositoryUrl: https://github.com/PhylomatX/sbert_sagemaker
+          RepositoryUrl: https://github.com/PhylomatX/aws_lambda
 
   NotebookInstance:
     Type: AWS::SageMaker::NotebookInstance
