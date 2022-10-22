@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Template to deploy a sentence transformer
+
+Resources:
+  CodeRepository:
+    Type: AWS::SageMaker::CodeRepository
+    Properties:
+      GitConfig:
+          RepositoryUrl: https://github.com/PhylomatX/sbert_sagemaker
+
+  NotebookInstance:
+    Type: AWS::SageMaker::NotebookInstance
+    Properties:
+      InstanceType: ml.t3.medium
+      RoleArn: !GetAtt Role.Arn
+      DefaultCodeRepository: !GetAtt CodeRepository.CodeRepositoryName
+
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      Policies:
+        - PolicyName: CustomNotebookAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                  - "s3:PutObject"
+                  - "s3:DeleteObject"
+                  - "s3:PutObjectAcl"
+                Resource:
+                  - !Sub arn:aws:s3:::${s3BucketBackend}/*
+                  - !Sub arn:aws:s3:::${s3BucketLambda}/*
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+        - arn:aws:iam::aws:policy/AWSCloudFormationReadOnlyAccess
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - sagemaker.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+
+  s3BucketBackend:
+    Type: AWS::S3::Bucket
+
+  s3BucketLambda:
+    Type: AWS::S3::Bucket
+
+
+Outputs:
+
+  s3BucketBackend:
+    Description: S3 bucket name for backend
+    Value: !Ref s3BucketBackend
+
+  s3BucketLambda:
+    Description: S3 bucket name for lambda
+    Value: !Ref s3BucketLambda
+
+  SageMakerNotebookURL:
+    Description: SageMaker Notebook Instance
+    Value: !Join
+      - ''
+      - - 'https://console.aws.amazon.com/sagemaker/home?region=eu-central-1#/notebook-instances/openNotebook/'
+        - !GetAtt NotebookInstance.NotebookInstanceName
+        - '?view=classic'
